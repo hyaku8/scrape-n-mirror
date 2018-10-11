@@ -49,6 +49,37 @@ namespace scrapenmirror.Controllers
             return Ok(scrape);
         }
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetScrape([FromRoute]string id)
+        {
+            Scrape scrape = this.scrapes.Where(x => x.Id == id).FirstOrDefault();
+            if (scrape == null)
+            {
+                return NotFound();
+            }
+            else
+            {
+                Response.StatusCode = (int)scrape.HttpResponseMessage.StatusCode;
+                foreach (var header in scrape.HttpResponseMessage.Headers)
+                {
+                    Response.Headers[header.Key] = header.Value.ToArray();
+                }
+                foreach (var header in scrape.HttpResponseMessage.Content.Headers)
+                {
+                    Response.Headers[header.Key] = header.Value.ToArray();
+                }
+                await scrape.HttpResponseMessage.Content.CopyToAsync(Response.Body);
+            }
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult GetScrapes()
+        {
+            return Ok(this.scrapes.Values);
+        }
+
         public class ScrapeRequest
         {
             public string Url { get; set; }
